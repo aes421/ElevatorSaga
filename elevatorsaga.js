@@ -1,5 +1,6 @@
 {
     init: function(elevators, floors) {
+        var waitingQueue = [];
         for (var e=0; e<elevators.length; e++){
             var elevator = elevators[e];
             setElevatorHandlers(elevator);
@@ -11,18 +12,28 @@
 
         function setFloorHandlers(floor){
             floor.on("up_button_pressed", function() {
-            // Maybe tell an elevator to go to this floor?
+                if (!waitingQueue.includes(floor.level)){
+                    waitingQueue.push(floor.level);
+                }
+
+                console.log("up_button_pressed: ", waitingQueue, " length: ", waitingQueue.length);
         })
             floor.on("down_button_pressed", function() {
-        // Maybe tell an elevator to go to this floor?
+                if (!waitingQueue.includes(floor.level)){
+                    waitingQueue.push(floor.level);
+                }
+                console.log("down_button_pressed: ", waitingQueue, " length: ", waitingQueue.length);
         })
         }
 
         function setElevatorHandlers(elevator){
             elevator.on("idle", function() {
-                //console.log("idle start: ", elevator.destinationQueue);
-                //if not at top go one up
-                elevator.goToFloor(0)
+                //if not at top go one up;
+                console.log("idle: ");//, waitingQueue, " length: ", waitingQueue.length);
+                if (waitingQueue.length > 0){
+                    elevator.goToFloor(waitingQueue[0]);
+                }
+                waitingQueue = waitingQueue.slice(1,waitingQueue.length);
                 if (elevator.currentFloor() < floors.length-1){
                     elevator.goToFloor(elevator.currentFloor() + 1);
                 }
@@ -30,32 +41,34 @@
                 else {
                     elevator.goToFloor(0);
                 }
-                setElevatorSignals(elevator);   
-                //console.log("idle end: ", elevator.destinationQueue);
+                setElevatorSignals(elevator);
                 });
 
             elevator.on("floor_button_pressed", function(floorNum){
-                //console.log("floor_button_pressed start: ", elevator.destinationQueue);
+                console.log("floor_button_pressed");
                 elevator.goToFloor(floorNum);
-                //console.log("Pressed floors: ",elevator.getPressedFloors());
-                //console.log("Destination Queue: ",elevator.destinationQueue);
 
                 optimizeOrder(elevator);
                 setElevatorSignals(elevator);
-                //console.log("floor_button_pressed end: ", elevator.destinationQueue);
             });
 
             elevator.on("stopped_at_floor", function(floorNum) {
-                //console.log("stopped_at_floor start: ", elevator.destinationQueue);
+                if (waitingQueue.includes(floorNum)){
+                    var temp=[];
+                    for (var t=0;t<waitingQueue.length;t++){
+                        if (waitingQueue[t].level != floorNum){
+                            temp.push(floorNum);
+                        }
+                    }
+                    waitingQueue = temp;
+                }
                 optimizeOrder(elevator);
                 setElevatorSignals(elevator);
-                //console.log("stopped_at_floor end: ", elevator.destinationQueue);
             });
         }
 
 
         function setElevatorSignals(elevator){
-            //console.log("setElevatorSignals start: ", elevator.destinationQueue);
             if (elevator.currentFloor() < elevator.destinationQueue[0]){
                     down = false;
                     up = true;
@@ -70,60 +83,16 @@
             }
             elevator.goingDownIndicator(down);
             elevator.goingUpIndicator(up);
-            //console.log("setElevatorSignals end: ", elevator.destinationQueue);
         }
 
-        // may be able to simplify this alot if people don't get on elevator going wrong way
-        //need testing to determine their behavior
+
         function optimizeOrder(elevator){
             if (elevator.goingUpIndicator() && !elevator.goingDownIndicator()){
-                //console.log("Optimize start: ", elevator.destinationQueue);
                 elevator.destinationQueue = elevator.getPressedFloors();
-                //console.log("Optimize up end: ", elevator.destinationQueue);
             }
             if (elevator.goingDownIndicator() && !elevator.goingUpIndicator()){
-                //console.log("Optimize down start: ", elevator.destinationQueue);
                 elevator.destinationQueue = elevator.getPressedFloors().reverse();  
-                //console.log("Optimize down end: ", elevator.destinationQueue);
             }
-        //     var pressed = elevator.getPressedFloors();
-        //     var temp = elevator.getPressedFloors();
-        //     var passed=elevator.destinationQueue;
-        //     var index = 0;
-        //     //up - permutes the queue to be in ascending order starting at current floor
-        //     if (elevator.goingUpIndicator() && !elevator.goingDownIndicator()){
-        //         for (var i; i<pressed.length; i++){
-        //             if (pressed[i] >= elevator.currentFloor()){
-        //                 index = i;
-        //                 break;
-        //             }
-        //         }
-        //     pressed.splice(0,i);
-        //     temp.splice(i,temp.length);
-        //     pressed.concat(temp);
-        //     elevator.destinationQueue = pressed;
-        //     //console.log("Optimized Up: ", elevator.destinationQueue);
-        //     }
-
-        // //down - permutes the queue to be in descending order starting at current floor
-        // if (elevator.goingDownIndicator()){
-        //         for (var i=0; i<pressed.length; i++){
-        //             if (pressed[i] >= elevator.currentFloor()){
-        //                 index = i-1;
-        //                 break;
-        //             }
-        //         }
-        //     pressed.splice(0,i);
-        //     temp.splice(i,temp.length);
-        //     var reverse=[];
-        //     for (var j = pressed.length; j>pressed.length; j--){
-        //         reverse.append(pressed[j]);
-        //     }
-        //     reverse.concat(temp);
-        //     elevator.destinationQueue = reverse;
-        //     //console.log("Optimized Down: ", elevator.destinationQueue);
-            
-        // }
       }
 
 },
