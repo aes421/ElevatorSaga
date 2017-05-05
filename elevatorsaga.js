@@ -62,7 +62,7 @@
                     console.log("This floor is in our waitingQueue!!", waitingQueue);
                     var index = waitingQueue.indexOf(floorNum);
                     console.log("INDEX YO:", index);
-                    waitingQueue = waitingQueue.splice(index, 1);
+                    waitingQueue.splice(index, 1);
                     console.log("EXTERMINATE!!", waitingQueue);
                 }
 
