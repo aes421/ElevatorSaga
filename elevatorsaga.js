@@ -1,7 +1,7 @@
 {
     init: function(elevators, floors) {
         var waitingQueue = [];
-        for (var e=0; e<elevators.length; e++){
+        for (var e=0; e<elevators.length; e++){ //
             var elevator = elevators[e];
             setElevatorHandlers(elevator);
         }
@@ -36,16 +36,10 @@
                     elevator.goToFloor(waitingQueue[0]);
                 }
                 else{
-                    elevator.goToFloor(Math.floor(floors.length/2));
+                    var assignedFloor = elevators.indexOf(elevator);
+                    elevator.goToFloor(assignedFloor);
+                    //elevator.goToFloor(Math.floor(floors.length/2));
                 }
-               
-                // if (elevator.currentFloor() < floors.length-1){
-                //     elevator.goToFloor(elevator.currentFloor() + 1);
-                // }
-                // //if at top go to 0
-                // else {
-                //     elevator.goToFloor(0);
-                // }
                 setElevatorSignals(elevator);
                 });
 
