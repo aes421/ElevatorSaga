@@ -12,17 +12,19 @@
 
         function setFloorHandlers(floor){
             floor.on("up_button_pressed", function() {
+                console.log("up_button_pressed BEFORE: ", waitingQueue, " length: ", waitingQueue.length);
                 if (!waitingQueue.includes(floor.level)){
                     waitingQueue.push(floor.level);
                 }
 
-                console.log("up_button_pressed: ", waitingQueue, " length: ", waitingQueue.length);
+                console.log("up_button_pressed AFTER: ", waitingQueue, " length: ", waitingQueue.length);
         })
             floor.on("down_button_pressed", function() {
+                console.log("down_button_pressed BEFORE: ", waitingQueue, " length: ", waitingQueue.length)
                 if (!waitingQueue.includes(floor.level)){
                     waitingQueue.push(floor.level);
                 }
-                console.log("down_button_pressed: ", waitingQueue, " length: ", waitingQueue.length);
+                console.log("down_button_pressed AFTER: ", waitingQueue, " length: ", waitingQueue.length);
         })
         }
 
@@ -33,19 +35,22 @@
                 if (waitingQueue.length > 0){
                     elevator.goToFloor(waitingQueue[0]);
                 }
-                waitingQueue = waitingQueue.slice(1,waitingQueue.length);
-                if (elevator.currentFloor() < floors.length-1){
-                    elevator.goToFloor(elevator.currentFloor() + 1);
+                else{
+                    elevator.goToFloor(Math.floor(floors.length/2));
                 }
-                //if at top go to 0
-                else {
-                    elevator.goToFloor(0);
-                }
+               
+                // if (elevator.currentFloor() < floors.length-1){
+                //     elevator.goToFloor(elevator.currentFloor() + 1);
+                // }
+                // //if at top go to 0
+                // else {
+                //     elevator.goToFloor(0);
+                // }
                 setElevatorSignals(elevator);
                 });
 
             elevator.on("floor_button_pressed", function(floorNum){
-                console.log("floor_button_pressed");
+                //console.log("floor_button_pressed");
                 elevator.goToFloor(floorNum);
 
                 optimizeOrder(elevator);
@@ -54,14 +59,13 @@
 
             elevator.on("stopped_at_floor", function(floorNum) {
                 if (waitingQueue.includes(floorNum)){
-                    var temp=[];
-                    for (var t=0;t<waitingQueue.length;t++){
-                        if (waitingQueue[t].level != floorNum){
-                            temp.push(floorNum);
-                        }
-                    }
-                    waitingQueue = temp;
+                    console.log("This floor is in our waitingQueue!!", waitingQueue);
+                    var index = waitingQueue.indexOf(floorNum);
+                    console.log("INDEX YO:", index);
+                    waitingQueue = waitingQueue.splice(index, 1);
+                    console.log("EXTERMINATE!!", waitingQueue);
                 }
+
                 optimizeOrder(elevator);
                 setElevatorSignals(elevator);
             });
