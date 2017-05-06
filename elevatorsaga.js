@@ -12,19 +12,19 @@
 
         function setFloorHandlers(floor){
             floor.on("up_button_pressed", function() {
-                console.log("up_button_pressed BEFORE: ", waitingQueue, " length: ", waitingQueue.length);
+                //console.log("up_button_pressed BEFORE: ", waitingQueue, " length: ", waitingQueue.length);
                 if (!waitingQueue.includes(floor.level)){
                     waitingQueue.push(floor.level);
                 }
 
-                console.log("up_button_pressed AFTER: ", waitingQueue, " length: ", waitingQueue.length);
+                //console.log("up_button_pressed AFTER: ", waitingQueue, " length: ", waitingQueue.length);
         })
             floor.on("down_button_pressed", function() {
-                console.log("down_button_pressed BEFORE: ", waitingQueue, " length: ", waitingQueue.length)
+                //console.log("down_button_pressed BEFORE: ", waitingQueue, " length: ", waitingQueue.length)
                 if (!waitingQueue.includes(floor.level)){
                     waitingQueue.push(floor.level);
                 }
-                console.log("down_button_pressed AFTER: ", waitingQueue, " length: ", waitingQueue.length);
+                //console.log("down_button_pressed AFTER: ", waitingQueue, " length: ", waitingQueue.length);
         })
         }
 
@@ -53,15 +53,28 @@
 
             elevator.on("stopped_at_floor", function(floorNum) {
                 if (waitingQueue.includes(floorNum)){
-                    console.log("This floor is in our waitingQueue!!", waitingQueue);
+                    //console.log("This floor is in our waitingQueue!!", waitingQueue);
                     var index = waitingQueue.indexOf(floorNum);
-                    console.log("INDEX YO:", index);
+                    //console.log("INDEX YO:", index);
                     waitingQueue.splice(index, 1);
-                    console.log("EXTERMINATE!!", waitingQueue);
+                    //console.log("EXTERMINATE!!", waitingQueue);
                 }
 
                 optimizeOrder(elevator);
                 setElevatorSignals(elevator);
+            });
+
+            elevator.on("passing_floor", function(floorNum, direction) {
+                //if there's people waiting and the elevator is less than half full
+                if(waitingQueue.includes(floorNum) && elevator.loadFactor()<=0.5){
+                    //person also needs to be going same direction
+                    if ((elevator.goingDownIndicator() && direction == "up") || elevator.goingDownIndicator() && direction == "down"){
+                        //stop and pick them up
+                        elevator.goToFloor(floorNum);
+                        optimizeOrder(elevator);
+                    }
+
+                }
             });
         }
 
@@ -85,11 +98,14 @@
 
 
         function optimizeOrder(elevator){
-            if (elevator.goingUpIndicator() && !elevator.goingDownIndicator()){
-                elevator.destinationQueue = elevator.getPressedFloors();
+            //need to optimize destination queue not pressed floors
+             if (elevator.goingUpIndicator() && !elevator.goingDownIndicator()){
+                elevator.destinationQueue = elevator.destinationQueue.sort()//elevator.getPressedFloors();
+                elevator.checkDestinationQueue();
             }
             if (elevator.goingDownIndicator() && !elevator.goingUpIndicator()){
-                elevator.destinationQueue = elevator.getPressedFloors().reverse();  
+                elevator.destinationQueue = elevator.destinationQueue.sort().reverse()//elevator.getPressedFloors().reverse();
+                elevator.checkDestinationQueue();  
             }
       }
 
