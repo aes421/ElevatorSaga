@@ -26,11 +26,10 @@
         function setElevatorHandlers(elevator){
             elevator.on("idle", function() {
                 //if not at top go one up;
-                if (waitingQueue.length > 0){
-                    if (!in_another_queue(waitingQueue[0])){
+                if (!in_another_queue(waitingQueue[0])){
+                    if (waitingQueue.length > 0){
                         elevator.goToFloor(waitingQueue[0]);
                     }
-                    
                 }
                 else{
                     var assignedFloor = elevators.indexOf(elevator);
@@ -103,9 +102,9 @@
       }
 
       function in_another_queue(floorNum){
-        for (e=0; e<elevators.length; e++){ 
-            if (elevators[e].destinationQueue.includes(floorNum)){
-                return true;
+        for (e=0; e<elevators.length; e++){
+            if (elevators[e].destinationQueue.includes(floorNum) && elevators[e].loadFactor()<=0.5){
+                    return true;
             }
         }
         return false;
